@@ -52,6 +52,7 @@
             // 
             // T1
             // 
+            this.T1.Enabled = true;
             this.T1.Interval = 1000;
             this.T1.Tick += new System.EventHandler(this.T1_Tick);
             // 
@@ -74,7 +75,7 @@
             this.text_path.Name = "text_path";
             this.text_path.Size = new System.Drawing.Size(259, 20);
             this.text_path.TabIndex = 2;
-            this.text_path.Text = "D:\\";
+            this.text_path.Text = "C:/";
             // 
             // folder_choose
             // 
@@ -116,6 +117,7 @@
             this.Controls.Add(this.label1);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.Load += new System.EventHandler(this.Form1_Load);
             this.Leave += new System.EventHandler(this.Form1_Leave);
             this.ResumeLayout(false);
             this.PerformLayout();

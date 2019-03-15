@@ -22,32 +22,32 @@ namespace PS_ZD_Windows_Form_
 
         public Form1()
         {
-     
+
             InitializeComponent();
             InitializeWatcher();
-            T1.Enabled = true;
-            text_path.Text = Properties.Settings.Default.path; 
+            // text_path.Text = Properties.Settings.Default.path; 
             MailStatus.BackColor = Color.Green;
 
         }
-        
+
+
         private void InitializeWatcher()
         {
             _watcher = new FileSystemWatcher();
-            _watcher.Changed += _watcher_Changed;
-            _watcher.Created += _watcher_Changed;
-            _watcher.Deleted += _watcher_Changed;
-            _watcher.Renamed += _watcher_Changed;
+            _watcher.Changed += _watcher_ChangedAsync;
+            _watcher.Created += _watcher_ChangedAsync;
+            _watcher.Deleted += _watcher_ChangedAsync;
+            _watcher.Renamed += _watcher_ChangedAsync;
             _watcher.Path = text_path.Text;
             _watcher.EnableRaisingEvents = true;  // event to monitorowania statusu sciezki dostepu
         }
 
-     
 
-        public void _watcher_Changed(object sender, FileSystemEventArgs e)
+
+        public async void _watcher_ChangedAsync(object sender, FileSystemEventArgs e)
         {
-            
-            string log ="";
+
+            string log = "";
 
             switch (e.ChangeType)
             {
@@ -72,7 +72,7 @@ namespace PS_ZD_Windows_Form_
                 default:
                     break;
             }
-            
+
             if (InvokeRequired)     // dodanie wyjatku do watku monitorowania folderu
             {
                 BeginInvoke((Action)(() =>
@@ -82,48 +82,23 @@ namespace PS_ZD_Windows_Form_
                 }));
             }
 
-            EmailSendAsync(e);  // wyslanie maila po evencie w folderze
-          
+            MailStatus.BackColor = Color.Red;
+
+
+            EmailSender email = new EmailSender();
+
+            await email.EmailSendAsync(e.FullPath, e.Name);
+
+            MailStatus.BackColor = Color.Green;
+
+
         }
-
-        private async void EmailSendAsync(FileSystemEventArgs e)
-        {
-            SmtpClient client = new SmtpClient("smtp.gmail.com", 587);
-
-            Credentials name = new Credentials();
-
-            client.Credentials = new NetworkCredential()
-            {
-                UserName = "balluffkurscsharp@gmail.com",
-                Password = "0okmNJI("
-            };
-
-            client.EnableSsl = true;
-
-           MailMessage message = new MailMessage();
-           message.From = new MailAddress("balluffkurscsharp@gmail.comm", "Balluff Kurs Programowania");
-            message.To.Add(new MailAddress("marcin.cukrowski@gmail.com", "Marcin Cukrowski"));
-            message.Subject = "Kurs C# - informacja o zmianach w folderze";
-            message.Body = $"Uwaga,\r\n nastąpiła zmiana w folderze {text_path.Text} na pliku {e.Name} .\r\n ";
-
-
-            MailStatus.BackColor = Color.Red;  // jakas logika. nie wiem na czym flage oprzec w IF i dodatkowej metodzie
-        
-            await client.SendMailAsync(message);  //wyslanie maila asynchronicznie 
-
-            MailStatus.BackColor = Color.Green; // jakas logika. nie wiem na czym flage oprzec w IF i dodatkowej metodzie
-       
-        }
-
-      
 
         private void T1_Tick(object sender, EventArgs e)
         {
-            DateTime date = DateTime.Now;
 
-            label1.Text = $"Actual date : {date}";
+            UpdateTimer();
 
-           
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -132,10 +107,14 @@ namespace PS_ZD_Windows_Form_
 
             DialogResult result = folderBrowserDialog1.ShowDialog();
 
-            if (result == DialogResult.OK) 
+            if (result == DialogResult.OK)
             {
+
                 text_path.Text = folderBrowserDialog1.SelectedPath;
-                Properties.Settings.Default.path = text_path.Text;
+                
+                _watcher.Path = text_path.Text;
+
+                //Properties.Settings.Default.path = text_path.Text;
             }
         }
 
@@ -143,5 +122,21 @@ namespace PS_ZD_Windows_Form_
         {
             Properties.Settings.Default.Save();  //zapisanie zmian do zamykaniu okna
         }
+
+        public void Form1_Load(object sender, EventArgs e)
+        {
+
+            UpdateTimer();
+
+        }
+
+        private void UpdateTimer()
+        {
+            DateTime date = DateTime.Now;
+            // label1.Text = $"Actual date : {date.ToString("HH:mm:ss")}";
+            label1.Text = $"Actual date : {date:HH:mm:ss}";
+            //  label1.Text = $"Actual date : {date.ToShortTimeString()}";
+        }
     }
+
 }
